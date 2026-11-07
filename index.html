@@ -21,19 +21,12 @@
     .solara-card-custom {
       background: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), 
                   url('https://raw.githubusercontent.com/xwadas/MPK-Percobaan/main/WhatsApp_Image_2026-11-07_at_19.14.19-removebg-preview.png') !important;
-      background-size: 45% !important;
-      background-repeat: no-repeat !important;
+      background-size: cover !important;
       background-position: center !important;
-      backdrop-filter: blur(14px); 
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.6); 
-      border-radius: 18px;
-      padding: 2.2rem; 
-      box-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.45);
-      max-width: 650px; 
-      width: 95%; 
-      margin: 20px auto; 
-      color: #000000;
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 18px;
+      padding: 2.2rem; box-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.45);
+      max-width: 650px; width: 95%; margin: 20px auto; color: #000000;
       animation: cardSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .solara-card-custom h2 { margin-bottom: 8px; }
@@ -112,7 +105,8 @@
 
   <script>
     // ==========================================
-    // Josjis
+    // Ganti teks di dalam tanda kutip di bawah ini 
+    // dengan URL Web App Google Apps Script Anda:
     // ==========================================
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx-O8MB3MuoQ9FiOc2va8wlokYOaQh7LLwmit5MPg-8-gpiJny4Yk6fJV_vPmCHO5_l/exec";
 
@@ -120,3 +114,133 @@
 
     function showPage(pageName) {
       document.getElementById('page-lobby').classList.add('hidden');
+      document.getElementById('page-codebreaker').classList.add('hidden');
+      document.getElementById('page-kritik').classList.add('hidden');
+      document.getElementById('page-' + pageName).classList.remove('hidden');
+      if (pageName === 'lobby') fetchSheetData();
+    }
+
+    async function fetchSheetData() {
+      const container = document.getElementById('sheet-data-container');
+      if (!WEB_APP_URL || WEB_APP_URL === "URL_GOOGLE_APPS_SCRIPT_ANDA") {
+        container.innerHTML = `<div class="alert alert-error">URL Web App Google Sheets belum diatur di dalam kode.</div>`;
+        return;
+      }
+      try {
+        const res = await fetch(WEB_APP_URL);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          container.innerHTML = "";
+          data.forEach(item => {
+            const keys = Object.keys(item).filter(k => k.toLowerCase() !== 'no');
+            if (keys.length > 0) {
+              let html = `<div class="info-item-card"><h4>📌 ${item[keys[0]] || ""}</h4>`;
+              for (let i = 1; i < keys.length; i++) {
+                const val = String(item[keys[i]] || "").trim();
+                if (val) html += `<p style="margin: 4px 0;"><em>${keys[i]}:</em> ${val}</p>`;
+              }
+              html += `</div>`;
+              container.innerHTML += html;
+            }
+          });
+        } else {
+          container.innerHTML = `<div class="alert alert-info">Belum ada informasi terbaru.</div>`;
+        }
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert-error">❌ Gagal memuat data dari Google Sheets.</div>`;
+      }
+    }
+
+    function initGame() {
+      const digits = [];
+      while (digits.length < 3) {
+        const r = Math.floor(Math.random() * 9) + 1;
+        if (!digits.includes(r)) digits.push(r);
+      }
+      cbSecret = digits.join('');
+      cbAttempts = 0; cbHistory = []; cbWin = false;
+      document.getElementById('guess-input').value = "";
+      document.getElementById('cb-input-area').classList.remove('hidden');
+      document.getElementById('cb-history-area').innerHTML = "";
+      document.getElementById('cb-result-area').innerHTML = "";
+    }
+
+    function handleGuess() {
+      const val = document.getElementById('guess-input').value.trim();
+      if (val.length !== 3 || isNaN(val) || new Set(val).size !== 3) {
+        alert("Masukkan 3 digit angka unik (tidak boleh ada angka kembar)!"); return;
+      }
+      cbAttempts++;
+      let bulls = 0, cows = 0;
+      for (let i = 0; i < 3; i++) {
+        if (val[i] === cbSecret[i]) bulls++;
+        else if (cbSecret.includes(val[i])) cows++;
+      }
+      cbHistory.unshift(`Tebakan <strong>${val}</strong> ➔ 🎯 Tepat Posisi: <strong>${bulls}</strong> | 🟡 Benar Posisi Salah: <strong>${cows}</strong>`);
+      
+      let historyHtml = `<h3>📋 Riwayat Analisis Logika:</h3><ul style="padding-left: 20px; margin-top: 8px;">`;
+      cbHistory.forEach(h => historyHtml += `<li style="margin-bottom: 4px;">${h}</li>`);
+      document.getElementById('cb-history-area').innerHTML = historyHtml + `</ul>`;
+
+      if (bulls === 3) {
+        cbWin = true;
+        document.getElementById('cb-input-area').classList.add('hidden');
+        document.getElementById('cb-result-area').innerHTML = `
+          <div class="alert alert-success" style="margin-top: 15px;">🎉 <strong>LUAR BIASA! Kamu Berhasil Memecahkan Kode!</strong> Angka rahasianya adalah <strong>${cbSecret}</strong>.</div>
+          <div class="alert alert-info" style="margin-top: 8px;">Berhasil dipecahkan dalam ${cbAttempts} kali percobaan.</div>
+          <button class="btn-full btn-primary" onclick="initGame()">🔄 Reset / Kode Baru</button>`;
+      }
+      document.getElementById('guess-input').value = "";
+    }
+
+    async function sendKritikPesan() {
+      if (isSubmitting) return;
+      const nama = document.getElementById('nama-input').value.trim();
+      const noHp = document.getElementById('no-hp-input').value.trim();
+      const pesan = document.getElementById('pesan-input').value.trim();
+      const errorDiv = document.getElementById('form-error');
+      const btnSend = document.getElementById('btn-send-kritik');
+
+      if (!pesan) { errorDiv.textContent = "Pesan wajib diisi!"; errorDiv.classList.remove('hidden'); return; }
+
+      errorDiv.classList.add('hidden'); isSubmitting = true; btnSend.textContent = "⏳ Sedang Mengirim...";
+
+      const now = new Date();
+      const wibTime = new Date(now.getTime() + (7 * 60 + now.getTimezoneOffset()) * 60000);
+      const waktuKirim = wibTime.toISOString().replace('T', ' ').substring(0, 19);
+
+      const payload = { tipe: "kritik_pesan", waktu: waktuKirim, nama: nama || "Anonim", no_hp: noHp || "-", pesan: pesan };
+
+      try {
+        const res = await fetch(WEB_APP_URL, { 
+          method: 'POST', 
+          body: JSON.stringify(payload) 
+        });
+        if (res.ok) {
+          document.getElementById('kritik-form').classList.add('hidden');
+          document.getElementById('kritik-success').classList.remove('hidden');
+        } else {
+          errorDiv.textContent = "❌ Gagal mengirim data."; 
+          errorDiv.classList.remove('hidden');
+        }
+      } catch (err) {
+        errorDiv.textContent = "Kesalahan koneksi: " + err; 
+        errorDiv.classList.remove('hidden');
+      } finally {
+        isSubmitting = false; 
+        btnSend.textContent = "Kirim Pesan 🚀";
+      }
+    }
+
+    function resetFormKritik() {
+      document.getElementById('nama-input').value = ""; 
+      document.getElementById('no-hp-input').value = ""; 
+      document.getElementById('pesan-input').value = "";
+      document.getElementById('kritik-form').classList.remove('hidden'); 
+      document.getElementById('kritik-success').classList.add('hidden');
+    }
+
+    fetchSheetData();
+  </script>
+</body>
+</html>
