@@ -19,9 +19,8 @@
     }
     
     .solara-card-custom {
-      /* Menggunakan file gambar logo dari repositori Anda */
       background: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), 
-                  url('WhatsApp Image 2026-11-07_at_19.14.19-re...') !important;
+                  url('https://raw.githubusercontent.com/xwadas/MPK-Percobaan/main/WhatsApp_Image_2026-11-07_at_19.14.19-removebg-preview.png') !important;
       background-size: cover !important;
       background-position: center !important;
       backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -105,8 +104,11 @@
   </div>
 
   <script>
-    // Memanggil Netlify Function (Link Google Sheets tersimpan aman di Netlify)
-    const API_ENDPOINT = "/.netlify/functions/api";
+    // ==========================================
+    // Ganti teks di dalam tanda kutip di bawah ini 
+    // dengan URL Web App Google Apps Script Anda:
+    // ==========================================
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx-O8MB3MuoQ9FiOc2va8wlokYOaQh7LLwmit5MPg-8-gpiJny4Yk6fJV_vPmCHO5_l/exec";
 
     let cbSecret = "", cbAttempts = 0, cbHistory = [], cbWin = false, isSubmitting = false;
 
@@ -120,8 +122,12 @@
 
     async function fetchSheetData() {
       const container = document.getElementById('sheet-data-container');
+      if (!WEB_APP_URL || WEB_APP_URL === "URL_GOOGLE_APPS_SCRIPT_ANDA") {
+        container.innerHTML = `<div class="alert alert-error">URL Web App Google Sheets belum diatur di dalam kode.</div>`;
+        return;
+      }
       try {
-        const res = await fetch(API_ENDPOINT);
+        const res = await fetch(WEB_APP_URL);
         const data = await res.json();
         if (data && data.length > 0) {
           container.innerHTML = "";
@@ -141,7 +147,7 @@
           container.innerHTML = `<div class="alert alert-info">Belum ada informasi terbaru.</div>`;
         }
       } catch (err) {
-        container.innerHTML = `<div class="alert alert-error">❌ Gagal memuat data dari server.</div>`;
+        container.innerHTML = `<div class="alert alert-error">❌ Gagal memuat data dari Google Sheets.</div>`;
       }
     }
 
@@ -206,23 +212,32 @@
       const payload = { tipe: "kritik_pesan", waktu: waktuKirim, nama: nama || "Anonim", no_hp: noHp || "-", pesan: pesan };
 
       try {
-        const res = await fetch(API_ENDPOINT, { method: 'POST', body: JSON.stringify(payload) });
+        const res = await fetch(WEB_APP_URL, { 
+          method: 'POST', 
+          body: JSON.stringify(payload) 
+        });
         if (res.ok) {
           document.getElementById('kritik-form').classList.add('hidden');
           document.getElementById('kritik-success').classList.remove('hidden');
         } else {
-          errorDiv.textContent = "❌ Gagal mengirim data."; errorDiv.classList.remove('hidden');
+          errorDiv.textContent = "❌ Gagal mengirim data."; 
+          errorDiv.classList.remove('hidden');
         }
       } catch (err) {
-        errorDiv.textContent = "Kesalahan koneksi: " + err; errorDiv.classList.remove('hidden');
+        errorDiv.textContent = "Kesalahan koneksi: " + err; 
+        errorDiv.classList.remove('hidden');
       } finally {
-        isSubmitting = false; btnSend.textContent = "Kirim Pesan 🚀";
+        isSubmitting = false; 
+        btnSend.textContent = "Kirim Pesan 🚀";
       }
     }
 
     function resetFormKritik() {
-      document.getElementById('nama-input').value = ""; document.getElementById('no-hp-input').value = ""; document.getElementById('pesan-input').value = "";
-      document.getElementById('kritik-form').classList.remove('hidden'); document.getElementById('kritik-success').classList.add('hidden');
+      document.getElementById('nama-input').value = ""; 
+      document.getElementById('no-hp-input').value = ""; 
+      document.getElementById('pesan-input').value = "";
+      document.getElementById('kritik-form').classList.remove('hidden'); 
+      document.getElementById('kritik-success').classList.add('hidden');
     }
 
     fetchSheetData();
