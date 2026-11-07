@@ -1,251 +1,231 @@
-import os
-import solara
-import random
-import requests
-from datetime import datetime, timedelta, timezone
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MPK SMANKA</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    @keyframes colorShiftBackground { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @keyframes cardSlideIn { 0% { opacity: 0; transform: translateY(35px) scale(0.97); filter: blur(4px); } 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); } }
+    
+    .animated-bg {
+      min-height: 100vh;
+      background: linear-gradient(-45deg, #000000, #1e3a8a, #ffffff, #d4af37, #0f172a);
+      background-size: 400% 400%;
+      animation: colorShiftBackground 18s ease infinite;
+      padding: 20px 10px;
+      display: flex; justify-content: center; align-items: flex-start;
+    }
+    
+    .solara-card-custom {
+      /* Menggunakan file gambar logo dari repositori Anda */
+      background: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), 
+                  url('WhatsApp Image 2026-11-07_at_19.14.19-re...') !important;
+      background-size: cover !important;
+      background-position: center !important;
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 18px;
+      padding: 2.2rem; box-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.45);
+      max-width: 650px; width: 95%; margin: 20px auto; color: #000000;
+      animation: cardSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .solara-card-custom h2 { margin-bottom: 8px; }
+    .solara-card-custom p { margin-bottom: 12px; color: #000000; font-weight: 500; }
+    
+    .btn-full { width: 100%; padding: 12px 16px; margin-top: 8px; font-weight: 600; font-size: 15px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .btn-full:hover, .btn-back:hover { transform: translateY(-3px) scale(1.01); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35); }
+    .btn-primary { background-color: #1e3a8a; color: white; }
+    .btn-secondary { background-color: #4b5563; color: white; }
+    .btn-success { background-color: #16a34a; color: white; }
+    .btn-dark { background-color: #1f2937; color: white; }
+    .btn-back { padding: 8px 16px; border-radius: 12px; border: 1px solid #1f2937; background: transparent; color: #1f2937; cursor: pointer; font-weight: 600; margin-bottom: 12px; }
+    
+    .divider { border: 0; height: 1px; background: rgba(0,0,0,0.15); margin: 20px 0; }
+    .info-item-card { background: rgba(255, 255, 255, 0.85); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #1e3a8a; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 500; }
+    .form-control { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
+    .alert { padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 14px; }
+    .alert-success { background-color: #dcfce7; color: #166534; }
+    .alert-info { background-color: #e0f2fe; color: #075985; }
+    .alert-error { background-color: #fee2e2; color: #991b1b; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="animated-bg">
+    <!-- Lobby Utama -->
+    <div id="page-lobby" class="solara-card-custom">
+      <h2>🌟 Selamat Datang di MPK SMANKA!</h2>
+      <p>Jelajahi fitur interaktif aplikasi kami melalui menu di bawah ini:</p>
+      <button class="btn-full btn-primary" onclick="showPage('codebreaker'); initGame();">🎮 Mainkan Game Code Breaker</button>
+      <button class="btn-full btn-primary" onclick="showPage('kritik')">📝 Masuk ke Kritik & Pesan</button>
+      <hr class="divider">
+      <h3>📌 Informasi Terkini:</h3>
+      <div id="sheet-data-container" style="margin-top: 10px;">
+        <div class="alert alert-info">⏳ Memuat informasi dari server...</div>
+      </div>
+    </div>
 
-# State Global & Keamanan Environment Variable
-WEB_APP_URL = solara.reactive(os.environ.get("WEB_APP_URL", ""))
-current_page = solara.reactive("Lobby Utama")
-sheet_data = solara.reactive([])
+    <!-- Code Breaker -->
+    <div id="page-codebreaker" class="solara-card-custom hidden">
+      <button class="btn-back" onclick="showPage('lobby')">⬅️ Kembali</button>
+      <h2>🕵️‍♂️ Code Breaker</h2>
+      <p>Pecahkan 3 digit angka rahasia unik (1-9) menggunakan strategi analisis petunjuk!</p>
+      <div id="cb-input-area">
+        <div class="form-group">
+          <label>Masukkan 3 digit angka unik (Contoh: 123):</label>
+          <input type="text" id="guess-input" class="form-control" maxlength="3">
+        </div>
+        <button class="btn-full btn-success" onclick="handleGuess()">Analisis Tebakan 🔍</button>
+      </div>
+      <div id="cb-history-area" style="margin-top: 15px;"></div>
+      <div id="cb-result-area"></div>
+    </div>
 
-# State Game Code Breaker
-cb_secret = solara.reactive("")
-cb_attempts = solara.reactive(0)
-cb_history = solara.reactive([])
-cb_win = solara.reactive(False)
-guess_input = solara.reactive("")
+    <!-- Kritik & Pesan -->
+    <div id="page-kritik" class="solara-card-custom hidden">
+      <button class="btn-back" onclick="showPage('lobby')">⬅️ Kembali</button>
+      <h2>📝 Halaman Kritik & Pesan</h2>
+      <p>Silakan isi pesan di bawah ini. Kolom Nama dan No HP bersifat opsional.</p>
+      <div id="kritik-form">
+        <div class="form-group"><label>Nama Lengkap (Opsional)</label><input type="text" id="nama-input" class="form-control"></div>
+        <div class="form-group"><label>No HP / WhatsApp (Opsional)</label><input type="text" id="no-hp-input" class="form-control"></div>
+        <div class="form-group"><label>Pesan / Kritik & Saran (Wajib Diisi)</label><textarea id="pesan-input" class="form-control" rows="4"></textarea></div>
+        <div id="form-error" class="alert alert-error hidden"></div>
+        <button id="btn-send-kritik" class="btn-full btn-primary" onclick="sendKritikPesan()">Kirim Pesan 🚀</button>
+      </div>
+      <div id="kritik-success" class="hidden">
+        <div class="alert alert-success">✅ Terima kasih! Data Anda berhasil masuk ke Google Sheets.</div>
+        <button class="btn-full btn-primary" onclick="resetFormKritik()">🔄 Kirim Pesan Lain</button>
+        <button class="btn-full btn-secondary" onclick="showPage('lobby')">🏠 Kembali ke Lobby</button>
+      </div>
+    </div>
+  </div>
 
-# State Form Kritik & Pesan (Anti Double-Submit)
-nama_input = solara.reactive("")
-no_hp_input = solara.reactive("")
-pesan_input = solara.reactive("")
-form_submitted_success = solara.reactive(False)
-form_error_msg = solara.reactive("")
-is_submitting = solara.reactive(False)
+  <script>
+    // Memanggil Netlify Function (Link Google Sheets tersimpan aman di Netlify)
+    const API_ENDPOINT = "/.netlify/functions/api";
 
-def init_game():
-    digits = random.sample(range(1, 10), 3)
-    cb_secret.value = "".join(map(str, digits))
-    cb_attempts.value = 0
-    cb_history.value = []
-    cb_win.value = False
-    guess_input.value = ""
+    let cbSecret = "", cbAttempts = 0, cbHistory = [], cbWin = false, isSubmitting = false;
 
-def fetch_sheet_data():
-    if not WEB_APP_URL.value:
-        return
-    try:
-        res = requests.get(WEB_APP_URL.value)
-        if res.status_code == 200:
-            sheet_data.value = res.json()
-    except Exception as e:
-        print("Gagal mengambil data GSheet:", e)
+    function showPage(pageName) {
+      document.getElementById('page-lobby').classList.add('hidden');
+      document.getElementById('page-codebreaker').classList.add('hidden');
+      document.getElementById('page-kritik').classList.add('hidden');
+      document.getElementById('page-' + pageName).classList.remove('hidden');
+      if (pageName === 'lobby') fetchSheetData();
+    }
 
-@solara.component
-def Page():
-    def auto_load_data():
-        if current_page.value == "Lobby Utama":
-            fetch_sheet_data()
-
-    solara.use_effect(auto_load_data, [current_page.value])
-
-    solara.Style("""
-        @keyframes colorShiftBackground {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+    async function fetchSheetData() {
+      const container = document.getElementById('sheet-data-container');
+      try {
+        const res = await fetch(API_ENDPOINT);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          container.innerHTML = "";
+          data.forEach(item => {
+            const keys = Object.keys(item).filter(k => k.toLowerCase() !== 'no');
+            if (keys.length > 0) {
+              let html = `<div class="info-item-card"><h4>📌 ${item[keys[0]] || ""}</h4>`;
+              for (let i = 1; i < keys.length; i++) {
+                const val = String(item[keys[i]] || "").trim();
+                if (val) html += `<p style="margin: 4px 0;"><em>${keys[i]}:</em> ${val}</p>`;
+              }
+              html += `</div>`;
+              container.innerHTML += html;
+            }
+          });
+        } else {
+          container.innerHTML = `<div class="alert alert-info">Belum ada informasi terbaru.</div>`;
         }
-        @keyframes cardSlideIn {
-            0% { opacity: 0; transform: translateY(35px) scale(0.97); filter: blur(4px); }
-            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert-error">❌ Gagal memuat data dari server.</div>`;
+      }
+    }
+
+    function initGame() {
+      const digits = [];
+      while (digits.length < 3) {
+        const r = Math.floor(Math.random() * 9) + 1;
+        if (!digits.includes(r)) digits.push(r);
+      }
+      cbSecret = digits.join('');
+      cbAttempts = 0; cbHistory = []; cbWin = false;
+      document.getElementById('guess-input').value = "";
+      document.getElementById('cb-input-area').classList.remove('hidden');
+      document.getElementById('cb-history-area').innerHTML = "";
+      document.getElementById('cb-result-area').innerHTML = "";
+    }
+
+    function handleGuess() {
+      const val = document.getElementById('guess-input').value.trim();
+      if (val.length !== 3 || isNaN(val) || new Set(val).size !== 3) {
+        alert("Masukkan 3 digit angka unik (tidak boleh ada angka kembar)!"); return;
+      }
+      cbAttempts++;
+      let bulls = 0, cows = 0;
+      for (let i = 0; i < 3; i++) {
+        if (val[i] === cbSecret[i]) bulls++;
+        else if (cbSecret.includes(val[i])) cows++;
+      }
+      cbHistory.unshift(`Tebakan <strong>${val}</strong> ➔ 🎯 Tepat Posisi: <strong>${bulls}</strong> | 🟡 Benar Posisi Salah: <strong>${cows}</strong>`);
+      
+      let historyHtml = `<h3>📋 Riwayat Analisis Logika:</h3><ul style="padding-left: 20px; margin-top: 8px;">`;
+      cbHistory.forEach(h => historyHtml += `<li style="margin-bottom: 4px;">${h}</li>`);
+      document.getElementById('cb-history-area').innerHTML = historyHtml + `</ul>`;
+
+      if (bulls === 3) {
+        cbWin = true;
+        document.getElementById('cb-input-area').classList.add('hidden');
+        document.getElementById('cb-result-area').innerHTML = `
+          <div class="alert alert-success" style="margin-top: 15px;">🎉 <strong>LUAR BIASA! Kamu Berhasil Memecahkan Kode!</strong> Angka rahasianya adalah <strong>${cbSecret}</strong>.</div>
+          <div class="alert alert-info" style="margin-top: 8px;">Berhasil dipecahkan dalam ${cbAttempts} kali percobaan.</div>
+          <button class="btn-full btn-primary" onclick="initGame()">🔄 Reset / Kode Baru</button>`;
+      }
+      document.getElementById('guess-input').value = "";
+    }
+
+    async function sendKritikPesan() {
+      if (isSubmitting) return;
+      const nama = document.getElementById('nama-input').value.trim();
+      const noHp = document.getElementById('no-hp-input').value.trim();
+      const pesan = document.getElementById('pesan-input').value.trim();
+      const errorDiv = document.getElementById('form-error');
+      const btnSend = document.getElementById('btn-send-kritik');
+
+      if (!pesan) { errorDiv.textContent = "Pesan wajib diisi!"; errorDiv.classList.remove('hidden'); return; }
+
+      errorDiv.classList.add('hidden'); isSubmitting = true; btnSend.textContent = "⏳ Sedang Mengirim...";
+
+      const now = new Date();
+      const wibTime = new Date(now.getTime() + (7 * 60 + now.getTimezoneOffset()) * 60000);
+      const waktuKirim = wibTime.toISOString().replace('T', ' ').substring(0, 19);
+
+      const payload = { tipe: "kritik_pesan", waktu: waktuKirim, nama: nama || "Anonim", no_hp: noHp || "-", pesan: pesan };
+
+      try {
+        const res = await fetch(API_ENDPOINT, { method: 'POST', body: JSON.stringify(payload) });
+        if (res.ok) {
+          document.getElementById('kritik-form').classList.add('hidden');
+          document.getElementById('kritik-success').classList.remove('hidden');
+        } else {
+          errorDiv.textContent = "❌ Gagal mengirim data."; errorDiv.classList.remove('hidden');
         }
-        .animated-bg {
-            min-height: 100vh;
-            background: linear-gradient(-45deg, #000000, #1e3a8a, #ffffff, #d4af37, #0f172a);
-            background-size: 400% 400%;
-            animation: colorShiftBackground 18s ease infinite;
-            padding: 20px 10px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
-        .solara-card-custom {
-            /* Ganti URL_RAW_GITHUB_LOGO_ANDA dengan link raw gambar logo Anda */
-            background: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), 
-                        url('https://github.com/xwadas/MPK-Percobaan/blob/main/WhatsApp_Image_2026-11-07_at_19.14.19-removebg-preview.png?raw=true') !important;
-            background-size: cover !important;
-            background-position: center !important;
-            backdrop-filter: blur(14px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.6) !important;
-            border-radius: 18px !important;
-            padding: 2.2rem !important;
-            box-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.45) !important;
-            max-width: 650px !important;
-            width: 95% !important;
-            margin: 20px auto !important;
-            color: #000000 !important;
-            animation: cardSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .solara-card-custom h2, .solara-card-custom p, .solara-card-custom span {
-            color: #000000 !important;
-            font-weight: 500;
-        }
-        .info-item-card {
-            background: rgba(255, 255, 255, 0.85);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 12px;
-            border-left: 4px solid #1e3a8a;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-        .solara-card-custom button, .btn-full {
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-            border-radius: 12px !important;
-        }
-        .solara-card-custom button:hover, .btn-full:hover {
-            transform: translateY(-3px) scale(1.01) !important;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35) !important;
-        }
-        .btn-full {
-            width: 100% !important;
-            margin-top: 8px !important;
-            font-weight: 600 !important;
-        }
-    """)
+      } catch (err) {
+        errorDiv.textContent = "Kesalahan koneksi: " + err; errorDiv.classList.remove('hidden');
+      } finally {
+        isSubmitting = false; btnSend.textContent = "Kirim Pesan 🚀";
+      }
+    }
 
-    with solara.Div(classes=["animated-bg"]):
-        if current_page.value == "Lobby Utama":
-            with solara.Card(classes=["solara-card-custom"]):
-                solara.Markdown("## 🌟 Selamat Datang di MPK SMANKA!")
-                solara.Markdown("Jelajahi fitur interaktif aplikasi kami melalui menu di bawah ini:")
-                solara.Spacing(2)
+    function resetFormKritik() {
+      document.getElementById('nama-input').value = ""; document.getElementById('no-hp-input').value = ""; document.getElementById('pesan-input').value = "";
+      document.getElementById('kritik-form').classList.remove('hidden'); document.getElementById('kritik-success').classList.add('hidden');
+    }
 
-                def go_to_game():
-                    init_game()
-                    current_page.value = "Code Breaker"
-
-                solara.Button("🎮 Mainkan Game Code Breaker", on_click=go_to_game, color="primary", classes=["btn-full"])
-                solara.Button("📝 Masuk ke Kritik & Pesan", on_click=lambda: current_page.set("Kritik & Pesan"), color="primary", classes=["btn-full"])
-
-                solara.Spacing(3)
-                solara.Markdown("---")
-                solara.Markdown("### 📌 Informasi Terkini:")
-                solara.Spacing(1)
-
-                if sheet_data.value:
-                    for item in sheet_data.value:
-                        keys = [k for k in item.keys() if k.lower() != "no"]
-                        if keys:
-                            title_key = keys[0]
-                            title_val = item.get(title_key, "")
-                            with solara.Div(classes=["info-item-card"]):
-                                solara.Markdown(f"#### 📌 {title_val}")
-                                for k in keys[1:]:
-                                    val = item.get(k, "")
-                                    if str(val).strip():
-                                        solara.Markdown(f"*{k}:* {val}")
-                else:
-                    solara.Info("⏳ Memuat informasi dari server...")
-
-        elif current_page.value == "Code Breaker":
-            with solara.Card(classes=["solara-card-custom"]):
-                solara.Button("⬅️ Kembali", on_click=lambda: current_page.set("Lobby Utama"), color="dark", outlined=True)
-                solara.Spacing(1)
-                solara.Markdown("## 🕵️‍♂️ Code Breaker")
-                solara.Markdown("Pecahkan 3 digit angka rahasia unik (1-9) menggunakan strategi analisis petunjuk!")
-                solara.Spacing(1)
-
-                if not cb_win.value:
-                    solara.InputText("Masukkan 3 digit angka unik (Contoh: 123):", value=guess_input)
-                    solara.Spacing(1)
-
-                    def handle_guess():
-                        val = guess_input.value.strip()
-                        if len(val) != 3 or not val.isdigit() or len(set(val)) != 3:
-                            return
-                        cb_attempts.value += 1
-                        secret = cb_secret.value
-                        bulls = sum(1 for a, b in zip(val, secret) if a == b)
-                        cows = sum(1 for a in val if a in secret) - bulls
-                        new_hist = cb_history.value.copy()
-                        new_hist.append(f"Tebakan **{val}** ➔ 🎯 Tepat Posisi: **{bulls}** | 🟡 Benar Posisi Salah: **{cows}**")
-                        cb_history.value = new_hist
-                        if bulls == 3:
-                            cb_win.value = True
-
-                    solara.Button("Analisis Tebakan 🔍", on_click=handle_guess, color="success", classes=["btn-full"])
-
-                if cb_history.value:
-                    solara.Markdown("### 📋 Riwayat Analisis Logika:")
-                    for h in reversed(cb_history.value):
-                        solara.Markdown(f"- {h}")
-
-                if cb_win.value:
-                    solara.Success(f"🎉 **LUAR BIASA! Kamu Berhasil Memecahkan Kode!** Angka rahasianya adalah **{cb_secret.value}**.")
-                    solara.Info(f"Berhasil dipecahkan dalam {cb_attempts.value} kali percobaan analitik.")
-                    solara.Spacing(1)
-                    solara.Button("🔄 Reset / Kode Baru", on_click=init_game, color="primary", classes=["btn-full"])
-
-        elif current_page.value == "Kritik & Pesan":
-            with solara.Card(classes=["solara-card-custom"]):
-                solara.Button("⬅️ Kembali", on_click=lambda: current_page.set("Lobby Utama"), color="dark", outlined=True)
-                solara.Spacing(1)
-                solara.Markdown("## 📝 Halaman Kritik & Pesan")
-                solara.Markdown("Silakan isi pesan di bawah ini. Kolom Nama dan No HP bersifat opsional.")
-                solara.Spacing(1)
-
-                if form_submitted_success.value:
-                    solara.Success("✅ Terima kasih! Data Anda berhasil masuk ke Google Sheets.")
-                    solara.Spacing(1)
-                    def reset_form():
-                        nama_input.value = ""
-                        no_hp_input.value = ""
-                        pesan_input.value = ""
-                        form_submitted_success.value = False
-                        is_submitting.value = False
-                    solara.Button("🔄 Kirim Pesan Lain", on_click=reset_form, color="primary", classes=["btn-full"])
-                    solara.Button("🏠 Kembali ke Lobby", on_click=lambda: current_page.set("Lobby Utama"), color="secondary", classes=["btn-full"])
-                else:
-                    solara.InputText("Nama Lengkap (Opsional)", value=nama_input)
-                    solara.InputText("No HP / WhatsApp (Opsional)", value=no_hp_input)
-                    solara.InputTextArea("Pesan / Kritik & Saran (Wajib Diisi)", value=pesan_input)
-                    solara.Spacing(1)
-
-                    if form_error_msg.value:
-                        solara.Error(form_error_msg.value)
-
-                    def send_kritik_pesan():
-                        if is_submitting.value:
-                            return
-                        if not pesan_input.value.strip():
-                            form_error_msg.value = "Pesan wajib diisi!"
-                            return
-                        is_submitting.value = True
-                        form_error_msg.value = ""
-
-                        final_nama = nama_input.value.strip() if nama_input.value.strip() else "Anonim"
-                        final_no_hp = no_hp_input.value.strip() if no_hp_input.value.strip() else "-"
-                        wib = timezone(timedelta(hours=7))
-                        waktu_kirim = datetime.now(wib).strftime("%Y-%m-%d %H:%M:%S")
-
-                        payload = {
-                            "tipe": "kritik_pesan",
-                            "waktu": waktu_kirim,
-                            "nama": final_nama,
-                            "no_hp": final_no_hp,
-                            "pesan": pesan_input.value.strip()
-                        }
-                        try:
-                            res = requests.post(WEB_APP_URL.value, json=payload)
-                            if res.status_code == 200:
-                                form_submitted_success.value = True
-                            else:
-                                form_error_msg.value = "❌ Gagal mengirim data ke server."
-                                is_submitting.value = False
-                        except Exception as e:
-                            form_error_msg.value = f"Terjadi kesalahan koneksi: {e}"
-                            is_submitting.value = False
-
-                    btn_label = "⏳ Sedang Mengirim..." if is_submitting.value else "Kirim Pesan 🚀"
-                    solara.Button(btn_label, on_click=send_kritik_pesan, color="primary", classes=["btn-full"])
+    fetchSheetData();
+  </script>
+</body>
+</html>
