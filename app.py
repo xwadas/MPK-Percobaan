@@ -73,7 +73,7 @@ def Page():
         .solara-card-custom {
             /* Ganti URL_RAW_GITHUB_LOGO_ANDA dengan link raw gambar logo Anda */
             background: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), 
-                        url('URL_RAW_GITHUB_LOGO_ANDA') !important;
+                        url('https://github.com/xwadas/MPK-Percobaan/blob/main/WhatsApp_Image_2026-11-07_at_19.14.19-removebg-preview.png?raw=true') !important;
             background-size: cover !important;
             background-position: center !important;
             backdrop-filter: blur(14px) !important;
