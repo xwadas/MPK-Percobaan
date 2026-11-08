@@ -48,7 +48,8 @@
     .btn-back { padding: 8px 16px; border-radius: 12px; border: 1px solid #1f2937; background: transparent; color: #1f2937; cursor: pointer; font-weight: 600; margin-bottom: 12px; }
     
     .divider { border: 0; height: 1px; background: rgba(0,0,0,0.15); margin: 20px 0; }
-    .info-item-card { background: rgba(255, 255, 255, 0.85); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #1e3a8a; box-shadow: 0 4px 15px rgba(0,0,0,0.05); animation: cardSlideIn 0.4s ease; }
+    .info-item-card { background: rgba(255, 255, 255, 0.85); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #1e3a8a; box-shadow: 0 4px 15px rgba(0,0,0,0.05); animation: cardSlideIn 0.4s ease; cursor: pointer; transition: transform 0.2s ease; }
+    .info-item-card:active { transform: scale(0.98); }
     .form-group { margin-bottom: 14px; }
     .form-group label { display: block; margin-bottom: 6px; font-weight: 500; }
     .form-control { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
@@ -144,9 +145,8 @@
           if (sheetItems.length > 0) {
             currentInfoIndex = 0;
             renderCurrentInfo();
-            // Atur waktu berganti otomatis (5000 ms = 5 detik)
             if (!infoInterval) {
-              infoInterval = setInterval(rotateInfo, 10000);
+              infoInterval = setInterval(rotateInfo, 5000);
             }
           } else {
             container.innerHTML = `<div class="alert alert-info">Belum ada informasi terbaru.</div>`;
@@ -166,16 +166,13 @@
       const item = sheetItems[currentInfoIndex];
       const keys = Object.keys(item).filter(k => k.toLowerCase() !== 'no');
 
-      let html = `<div class="info-item-card"><h4>📌 ${item[keys[0]] || ""}</h4>`;
+      // Ditambahkan onclick="rotateInfo()" agar bisa disentuh/diklik untuk bergeser
+      let html = `<div class="info-item-card" onclick="rotateInfo()" title="Sentuh untuk melihat info berikutnya"><h4>📌 ${item[keys[0]] || ""}</h4>`;
       for (let i = 1; i < keys.length; i++) {
         const val = String(item[keys[i]] || "").trim();
         if (val) html += `<p style="margin: 4px 0;"><em>${keys[i]}:</em> ${val}</p>`;
       }
       html += `</div>`;
-
-      if (sheetItems.length > 1) {
-        html += `<div style="text-align: center; font-size: 11px; color: #333; margin-top: -6px; margin-bottom: 8px;">Informasi ${currentInfoIndex + 1} dari ${sheetItems.length} (Berganti otomatis)</div>`;
-      }
 
       container.innerHTML = html;
     }
@@ -241,8 +238,8 @@
       errorDiv.classList.add('hidden'); isSubmitting = true; btnSend.textContent = "⏳ Sedang Mengirim...";
 
       const now = new Date();
-      const wipTime = new Date(now.getTime() + (7 * 60 + now.getTimezoneOffset()) * 60000);
-      const waktuKirim = wipTime.toISOString().replace('T', ' ').substring(0, 19);
+      const wibTime = new Date(now.getTime() + (7 * 60 + now.getTimezoneOffset()) * 60000);
+      const waktuKirim = wibTime.toISOString().replace('T', ' ').substring(0, 19);
 
       const payload = { tipe: "kritik_pesan", waktu: waktuKirim, nama: nama || "Anonim", no_hp: noHp || "-", pesan: pesan };
 
