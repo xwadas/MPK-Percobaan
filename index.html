@@ -7,7 +7,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     @keyframes colorShiftBackground { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    @keyframes cardSlideIn { 0% { opacity: 0; transform: translateY(35px) scale(0.97); filter: blur(4px); } 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); } }
+    @keyframes cardSlideIn { 0% { opacity: 0; transform: translateY(20px) scale(0.98); filter: blur(4px); } 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); } }
     
     .animated-bg {
       min-height: 100vh;
@@ -21,7 +21,7 @@
     .solara-card-custom {
       background-image: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), 
                         url('https://raw.githubusercontent.com/xwadas/MPK-Percobaan/main/WhatsApp_Image_2026-11-07_at_19.14.19-removebg-preview.png') !important;
-      background-size: 100% 100%, 100% auto !important;
+      background-size: 100% 100%, 40% auto !important;
       background-repeat: no-repeat, no-repeat !important;
       background-position: center, center !important;
       backdrop-filter: blur(14px); 
@@ -48,7 +48,7 @@
     .btn-back { padding: 8px 16px; border-radius: 12px; border: 1px solid #1f2937; background: transparent; color: #1f2937; cursor: pointer; font-weight: 600; margin-bottom: 12px; }
     
     .divider { border: 0; height: 1px; background: rgba(0,0,0,0.15); margin: 20px 0; }
-    .info-item-card { background: rgba(255, 255, 255, 0.85); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #1e3a8a; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .info-item-card { background: rgba(255, 255, 255, 0.85); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #1e3a8a; box-shadow: 0 4px 15px rgba(0,0,0,0.05); animation: cardSlideIn 0.4s ease; }
     .form-group { margin-bottom: 14px; }
     .form-group label { display: block; margin-bottom: 6px; font-weight: 500; }
     .form-control { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; outline: none; }
@@ -114,6 +114,9 @@
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx-O8MB3MuoQ9FiOc2va8wlokYOaQh7LLwmit5MPg-8-gpiJny4Yk6fJV_vPmCHO5_l/exec";
 
     let cbSecret = "", cbAttempts = 0, cbHistory = [], cbWin = false, isSubmitting = false;
+    let sheetItems = [];
+    let currentInfoIndex = 0;
+    let infoInterval = null;
 
     function showPage(pageName) {
       document.getElementById('page-lobby').classList.add('hidden');
@@ -133,25 +136,54 @@
         const res = await fetch(WEB_APP_URL);
         const data = await res.json();
         if (data && data.length > 0) {
-          container.innerHTML = "";
-          data.forEach(item => {
+          sheetItems = data.filter(item => {
             const keys = Object.keys(item).filter(k => k.toLowerCase() !== 'no');
-            if (keys.length > 0) {
-              let html = `<div class="info-item-card"><h4>📌 ${item[keys[0]] || ""}</h4>`;
-              for (let i = 1; i < keys.length; i++) {
-                const val = String(item[keys[i]] || "").trim();
-                if (val) html += `<p style="margin: 4px 0;"><em>${keys[i]}:</em> ${val}</p>`;
-              }
-              html += `</div>`;
-              container.innerHTML += html;
-            }
+            return keys.length > 0;
           });
+
+          if (sheetItems.length > 0) {
+            currentInfoIndex = 0;
+            renderCurrentInfo();
+            // Atur waktu berganti otomatis (5000 ms = 5 detik)
+            if (!infoInterval) {
+              infoInterval = setInterval(rotateInfo, 5000);
+            }
+          } else {
+            container.innerHTML = `<div class="alert alert-info">Belum ada informasi terbaru.</div>`;
+          }
         } else {
           container.innerHTML = `<div class="alert alert-info">Belum ada informasi terbaru.</div>`;
         }
       } catch (err) {
         container.innerHTML = `<div class="alert alert-error">❌ Gagal memuat data dari Google Sheets.</div>`;
       }
+    }
+
+    function renderCurrentInfo() {
+      const container = document.getElementById('sheet-data-container');
+      if (sheetItems.length === 0) return;
+
+      const item = sheetItems[currentInfoIndex];
+      const keys = Object.keys(item).filter(k => k.toLowerCase() !== 'no');
+
+      let html = `<div class="info-item-card"><h4>📌 ${item[keys[0]] || ""}</h4>`;
+      for (let i = 1; i < keys.length; i++) {
+        const val = String(item[keys[i]] || "").trim();
+        if (val) html += `<p style="margin: 4px 0;"><em>${keys[i]}:</em> ${val}</p>`;
+      }
+      html += `</div>`;
+
+      if (sheetItems.length > 1) {
+        html += `<div style="text-align: center; font-size: 11px; color: #333; margin-top: -6px; margin-bottom: 8px;">Informasi ${currentInfoIndex + 1} dari ${sheetItems.length} (Berganti otomatis)</div>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function rotateInfo() {
+      if (sheetItems.length <= 1) return;
+      currentInfoIndex = (currentInfoIndex + 1) % sheetItems.length;
+      renderCurrentInfo();
     }
 
     function initGame() {
@@ -209,8 +241,8 @@
       errorDiv.classList.add('hidden'); isSubmitting = true; btnSend.textContent = "⏳ Sedang Mengirim...";
 
       const now = new Date();
-      const wibTime = new Date(now.getTime() + (7 * 60 + now.getTimezoneOffset()) * 60000);
-      const waktuKirim = wibTime.toISOString().replace('T', ' ').substring(0, 19);
+      const wipTime = new Date(now.getTime() + (7 * 60 + now.getTimezoneOffset()) * 60000);
+      const waktuKirim = wipTime.toISOString().replace('T', ' ').substring(0, 19);
 
       const payload = { tipe: "kritik_pesan", waktu: waktuKirim, nama: nama || "Anonim", no_hp: noHp || "-", pesan: pesan };
 
