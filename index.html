@@ -21,7 +21,7 @@
     .solara-card-custom {
       background-image: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), 
                         url('https://raw.githubusercontent.com/xwadas/MPK-Percobaan/main/WhatsApp_Image_2026-11-07_at_19.14.19-removebg-preview.png') !important;
-      background-size: 100% 100%, 40% auto !important;
+      background-size: 100% 100%, 100% auto !important;
       background-repeat: no-repeat, no-repeat !important;
       background-position: center, center !important;
       backdrop-filter: blur(14px); 
@@ -146,7 +146,7 @@
             renderCurrentInfo();
             // Atur waktu berganti otomatis (5000 ms = 5 detik)
             if (!infoInterval) {
-              infoInterval = setInterval(rotateInfo, 5000);
+              infoInterval = setInterval(rotateInfo, 10000);
             }
           } else {
             container.innerHTML = `<div class="alert alert-info">Belum ada informasi terbaru.</div>`;
