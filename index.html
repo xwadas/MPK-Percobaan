@@ -21,7 +21,7 @@
     .solara-card-custom {
       background-image: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), 
                         url('https://raw.githubusercontent.com/xwadas/MPK-Percobaan/main/WhatsApp_Image_2026-11-07_at_19.14.19-removebg-preview.png') !important;
-      background-size: 100% 100%, 100% auto !important;
+      background-size: 100% 100%, 110% auto !important;
       background-repeat: no-repeat, no-repeat !important;
       background-position: center, center !important;
       backdrop-filter: blur(14px); 
@@ -146,7 +146,7 @@
             currentInfoIndex = 0;
             renderCurrentInfo();
             if (!infoInterval) {
-              infoInterval = setInterval(rotateInfo, 5000);
+              infoInterval = setInterval(rotateInfo, 8000);
             }
           } else {
             container.innerHTML = `<div class="alert alert-info">Belum ada informasi terbaru.</div>`;
@@ -166,13 +166,16 @@
       const item = sheetItems[currentInfoIndex];
       const keys = Object.keys(item).filter(k => k.toLowerCase() !== 'no');
 
-      // Ditambahkan onclick="rotateInfo()" agar bisa disentuh/diklik untuk bergeser
       let html = `<div class="info-item-card" onclick="rotateInfo()" title="Sentuh untuk melihat info berikutnya"><h4>📌 ${item[keys[0]] || ""}</h4>`;
       for (let i = 1; i < keys.length; i++) {
         const val = String(item[keys[i]] || "").trim();
         if (val) html += `<p style="margin: 4px 0;"><em>${keys[i]}:</em> ${val}</p>`;
       }
       html += `</div>`;
+
+      if (sheetItems.length > 1) {
+        html += `<div style="text-align: center; font-size: 11px; color: #333; margin-top: -6px; margin-bottom: 8px;">Informasi ${currentInfoIndex + 1} dari ${sheetItems.length}</div>`;
+      }
 
       container.innerHTML = html;
     }
