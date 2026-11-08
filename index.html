@@ -19,11 +19,11 @@
     }
     
     .solara-card-custom {
-      background: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), 
-                  url('https://raw.githubusercontent.com/xwadas/MPK-Percobaan/main/WhatsApp_Image_2026-11-07_at_19.14.19-removebg-preview.png') !important;
-      background-size: 45% !important;
-      background-repeat: no-repeat !important;
-      background-position: center !important;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), 
+                        url('https://raw.githubusercontent.com/xwadas/MPK-Percobaan/main/WhatsApp_Image_2026-11-07_at_19.14.19-removebg-preview.png') !important;
+      background-size: 100% 100%, 40% auto !important;
+      background-repeat: no-repeat, no-repeat !important;
+      background-position: center, center !important;
       backdrop-filter: blur(14px); 
       -webkit-backdrop-filter: blur(14px);
       border: 1px solid rgba(255, 255, 255, 0.6); 
@@ -111,9 +111,6 @@
   </div>
 
   <script>
-    // ==========================================
-    // Masukkan URL Web App Google Apps Script Anda di sini:
-    // ==========================================
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx-O8MB3MuoQ9FiOc2va8wlokYOaQh7LLwmit5MPg-8-gpiJny4Yk6fJV_vPmCHO5_l/exec";
 
     let cbSecret = "", cbAttempts = 0, cbHistory = [], cbWin = false, isSubmitting = false;
